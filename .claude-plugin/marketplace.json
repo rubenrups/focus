@@ -1,0 +1,22 @@
+{
+  "name": "rubenrups",
+  "owner": {
+    "name": "rubenrups",
+    "url": "https://github.com/rubenrups"
+  },
+  "description": "Personal agent skills, as installable Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "focus-orchestrator",
+      "source": "./",
+      "description": "Keeps you on the task you started: board, scheduled brief/check-ins/recap, consent-based repo scan, and a /focus command.",
+      "category": "productivity",
+      "keywords": [
+        "focus",
+        "productivity",
+        "task-tracking",
+        "scheduled-tasks"
+      ]
+    }
+  ]
+}

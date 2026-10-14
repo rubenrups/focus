@@ -1,0 +1,20 @@
+{
+  "name": "focus-orchestrator",
+  "version": "1.0.0",
+  "description": "Interview-driven focus orchestrator: a Now/Open/Parked board, scheduled morning brief, check-ins and recap, a consent-based read-only scan of local git repos, and a /focus command.",
+  "author": {
+    "name": "rubenrups",
+    "url": "https://github.com/rubenrups"
+  },
+  "repository": "https://github.com/rubenrups/focus",
+  "keywords": [
+    "focus",
+    "productivity",
+    "task-tracking",
+    "scheduled-tasks",
+    "git"
+  ],
+  "skills": [
+    "./skills/focus-orchestrator"
+  ]
+}

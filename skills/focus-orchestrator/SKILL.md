@@ -20,7 +20,7 @@ Ask these, one at a time:
 1. **Failure mode** - context-switching, stalling/forgetting, scope creep, or all. This decides which rules go into the check-in prompt (see step 3).
 2. **Task sources** - any mix of: chat only, Trello (needs read-only key/token env file), Gitea/GitHub issues, other. Ask where credentials live; do not ask the user to paste secrets.
 3. **Other sessions** - if `mcp__ccd_session_mgmt__list_sessions` is available, offer session activity as a source. If not available, skip.
-4. **Local code** - do NOT assume a tidy folder. Run discovery first (see "Discovering the user's code" below), show what you found, and let the user confirm which locations to scan. Offer the repo scanner.
+4. **Local code** - do NOT assume a tidy folder and do NOT search on your own. Offer the repo scanner, then follow "Discovering the user's code" below: ask where the code lives and scan only the locations the user approves.
 5. **Intensity** - quiet (digest + recap), moderate (+ idle/overload nudges), pushy (+ hourly check-ins).
 6. **Work hours and days** - and how flexible (late starts/finishes). Shift windows ~30 min to fit.
 7. **Notification channel** - push notification (PushNotification tool) or in-session only.
@@ -31,13 +31,15 @@ Write the understanding back as a short note and get correction before building.
 
 Users keep code in all kinds of places: Desktop, Documents, Downloads, OneDrive, a second drive, WSL, one big folder, or scattered one-offs. Never hardcode a root. Do this, read-only:
 
-1. **Check the usual suspects** that exist: home folder, Desktop, Documents, Downloads, OneDrive*, and folders named like `code`, `dev`, `src`, `source`, `repos`, `projects`, `work`, `git`, `workspace` on every drive. Also check the recent-projects lists of their editors if present (VS Code `storage.json`, JetBrains `recentProjects.xml`) and this app's session working directories (`list_sessions`).
-2. **Find `.git` folders** under those places, depth <= 4, skipping `node_modules`, `vendor`, `.venv`, `AppData`, `Windows`, `Program Files`. Cap the effort: if it is slow, narrow to the folders the user names.
-3. **Cluster by parent folder** and present a short table: folder | repo count | most recent commit. Do not list every repo.
-4. **Ask** which clusters to scan, whether to add loose repos by path, and what to exclude (copies, backups, vendored clones, archived projects). Offer "scan everything found" as the recommended default only if the count is small (< 30); otherwise suggest only repos with a commit in the last 90 days.
-5. **Persist the answer** as arguments in the scheduled-task prompts: `-Roots`, `-Repos`, `-Depth`, `-Exclude`. Tell the user how to add a new location later (edit the task prompt, or re-run this skill).
+**Consent first. Never search the machine on your own.** Do not look in any folder, drive, editor config or session list until the user has said which locations are allowed. Searching "everywhere" is not a default and not a fallback.
 
-If no git repos are found, say so, drop the repo scanner from the setup, and continue with the other sources.
+1. **Ask, don't look.** Ask the user where their code lives, in their own words: "Which folders hold the projects you want me to keep an eye on? You can name several, or individual repos." Accept paths, drive names or "none, skip this". If they are unsure, offer these as *suggestions to approve one by one*, without having checked whether they exist: a folder like `C:\Code`, `~/code`, `~/dev`, `~/Documents`, `~/Desktop`. Optionally offer to look at (a) their editor's recent-projects list or (b) this app's session working directories as a way to jog their memory, but only read them if they say yes to that specific source.
+2. **Scan only approved paths.** For each approved folder, find `.git` directories up to the depth the user accepts (default 3, and say so), skipping `node_modules`, `vendor`, `.venv`, `AppData`, `Windows`, `Program Files`. Never descend outside an approved folder. Report any folder you could not read instead of working around it.
+3. **Show before keeping.** Present a short table: folder | repo count | most recent commit. Ask which clusters to keep, whether to add loose repos by path, and what to exclude (copies, backups, vendored clones, archived projects). Suggest narrowing to repos with a commit in the last 90 days if the count is large (> 30).
+4. **Persist the approved scope** as arguments in the scheduled-task prompts: `-Roots`, `-Repos`, `-Depth`, `-Exclude`. The scheduled runs must scan exactly that scope and nothing else; state this in each prompt. Tell the user how to widen or narrow it later (edit the task prompt, or re-run this skill).
+5. **Reading repo contents.** The scanner only reads git metadata (status, branch, ahead count, last commit date). Do not read source files, `.env` files or secrets from scanned repos unless the user asks for a specific one.
+
+If the user declines or no git repos are found, drop the repo scanner from the setup and continue with the other sources.
 
 ## 2. Build
 
@@ -45,6 +47,7 @@ Create under a folder the user picks (suggest `~/focus`, or next to their code i
 
 - `focus.md` - sections: Now (one task + done-when), Open (task | source | started | last touched), Parked, Log (append-only).
 - `scan-repos.ps1` - copy from this skill's folder (next to this SKILL.md). It takes `-Roots`, `-Repos`, `-Depth`, `-Exclude`, `-Out`; pass the discovery answers. Run it once and show the summary to verify it works. On non-Windows, port to bash with the same output format.
+- **`/focus` command** - copy `commands/focus.md` from this skill's folder to `~/.claude/commands/focus.md`, and write the absolute path of the user's `focus.md` as a single line into `~/.claude/focus-board-path`. Tell the user `/focus` is now their daily entry point (status, start, park, switch, done). Ask before overwriting an existing `focus.md` command.
 - Run the scan, then ask the user to eyeball the "needs attention" list for noise and add `-Exclude` patterns if they want.
 
 ## 3. Register scheduled tasks
