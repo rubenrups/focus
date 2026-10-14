@@ -89,6 +89,17 @@ Pick one route per machine. Installing both the skill and the plugin gives you t
 - **No secrets in output:** credentials are referenced by env file and variable name, never printed or stored.
 - `focus.md` and `repo-scan.md` contain your tasks and local paths, so they are git-ignored.
 
+## The dashboard (optional)
+
+Setup can publish a private dashboard page so the scheduled briefs stay at a few lines and the detail lives on one screen:
+
+- **Now** with its done-when and elapsed time
+- **Open** tasks with source (Trello, session, repo) and idle age
+- **Repos needing attention**, ranked by uncommitted files, with unpushed counts and a flag on work that has no card or session
+- **Parked** ideas and the recent **Log**
+
+The page is static. The scheduled tasks run `build-snapshot.ps1` (which turns `focus.md` and the repo scan into two JSON documents) and write them to the page's database, so it updates live without being republished. Only repo names (last two path segments) and your board text are published, to your own account; setup asks before publishing anything.
+
 ## The `/focus` command
 
 Setup installs `/focus` (from `commands/focus.md`) as your daily entry point:
@@ -113,6 +124,8 @@ You can also say the same things in plain chat.
 skills/focus-orchestrator/
   SKILL.md                        the skill (interview + build instructions)
   scan-repos.ps1                  read-only repo scanner
+  build-snapshot.ps1              focus.md + repo scan -> dashboard JSON
+  dashboard.html                  the dashboard page (published by setup, optional)
   commands/focus.md               the /focus slash command, installed by setup
 README.md                         this file
 .gitignore                        keeps personal state and secrets out of the repo

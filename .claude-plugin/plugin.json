@@ -1,6 +1,6 @@
 {
   "name": "focus-orchestrator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Interview-driven focus orchestrator: a Now/Open/Parked board, scheduled morning brief, check-ins and recap, a consent-based read-only scan of local git repos, and a /focus command.",
   "author": {
     "name": "rubenrups",

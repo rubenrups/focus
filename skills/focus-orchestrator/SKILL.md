@@ -48,6 +48,8 @@ Create under a folder the user picks (suggest `~/focus`, or next to their code i
 - `focus.md` - sections: Now (one task + done-when), Open (task | source | started | last touched), Parked, Log (append-only).
 - `scan-repos.ps1` - copy from this skill's folder (next to this SKILL.md). It takes `-Roots`, `-Repos`, `-Depth`, `-Exclude`, `-Out`; pass the discovery answers. Run it once and show the summary to verify it works. On non-Windows, port to bash with the same output format.
 - **`/focus` command** - copy `commands/focus.md` from this skill's folder to `~/.claude/commands/focus.md`, and write the absolute path of the user's `focus.md` as a single line into `~/.claude/focus-board-path`. Tell the user `/focus` is now their daily entry point (status, start, park, switch, done). Ask before overwriting an existing `focus.md` command.
+- **Dashboard (optional, ask first)** - offer a persistent dashboard so the briefs can stay short. It is a private artifact page that shows Now, Open, Parked, Log and the repos needing attention. Explain that publishing sends the board and repo names (last two path segments only, no full paths, no file contents) to the user's own claude.ai account, and get a yes. If they agree: load the `artifact-design` and `artifact-capabilities` skills, copy `dashboard.html` from this skill's folder into the focus folder, publish it with `capabilities: {db: {}}`, store the URL in `dashboard-url.txt` next to the board, copy `build-snapshot.ps1` next to the board, run it, and seed `dash/board` and `dash/repos` with `ArtifactData` from the generated `snapshots/*.json`. The page is static; scheduled tasks only write those two documents, they never republish it. If they decline, skip every dashboard step below and keep the full text briefs.
+- **Git tracking (optional, ask first)** - the board is plain text, so offer `git init` in the focus folder so it opens in the editor's diff view and keeps history. Add a `.gitignore` for `snapshots/` and `repo-scan.md`. Never commit, add a remote or push; the user does that. Warn that `focus.md` holds their task list and `dashboard-url.txt` a private link, so the folder should not be pushed anywhere public.
 - Run the scan, then ask the user to eyeball the "needs attention" list for noise and add `-Exclude` patterns if they want.
 
 ## 3. Register scheduled tasks
@@ -66,12 +68,13 @@ Task behaviour (adapt to the interview):
 - **Morning brief**: scan repos; list sessions; read Trello (GET only); flag repos with uncommitted/unpushed work that have no card and no session ("slipping through"); refresh Open in focus.md; end with "What is the ONE thing today, and what is done-when?"; push notification.
 - **Check-in**: stay silent if recent activity matches Now. Otherwise one message max: empty Now, working on something else (park or switch?), more than 3 open (drop or park?), Now idle 2h+. Only include the rules matching the user's failure mode.
 - **Recap**: done today, Now vs done-when, carried over, uncommitted/unpushed work to decide on (list only; user commits), Parked review.
+- **With a dashboard**: each task ends by running `build-snapshot.ps1` and writing the generated `board.json` / `repos.json` into the `dash` collection (read each document's `version` first and pass it as `if_version`). Briefs then print at most five lines plus the dashboard link. A silent check-in only `update`s `checkedAt` on `dash/board` and appends nothing to the Log, so the page does not look stale and the Log does not fill with "no change" lines. The morning brief passes its own "slipping through" judgement with `-Slipping 'Group\Name',...` (or `-Slipping '-'` for none).
 
 Scheduled tasks only run while the app is open; tell the user a missed task runs on next launch.
 
 ## 4. Verify and hand over
 
 - `list_scheduled_tasks` and show the final schedule.
-- Offer to run the morning brief once as a test.
-- Explain the chat commands: "start X, done when Y", "park: Z", "switch to X", "done".
-- Offer (do not do unasked) a dashboard artifact as a later add-on.
+- Offer to run the morning brief once as a test. Scheduled prompts that write to the dashboard are the part most likely to fail silently, so after that first run `list` the `dash` collection and confirm `board` and `repos` carry a fresh `updated` timestamp; report what you checked and what you could not.
+- Explain the commands: `/focus`, `/focus start X, done when Y`, `/focus park Z`, `/focus switch to X`, `/focus done`.
+- If the user declined the dashboard during build, mention once that it can be added later by re-running this skill; do not push it.

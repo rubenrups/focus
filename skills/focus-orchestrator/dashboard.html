@@ -1,0 +1,346 @@
+<title>Focus Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Schibsted+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one hero (Now) over a two-column work surface; open tasks left, repo pressure right, parked and log beneath. */
+:root {
+  --bg: #F2F6F7;
+  --surface: #FFFFFF;
+  --ink: #12262D;
+  --muted: #566B73;
+  --line: #D8E2E5;
+  --accent: #0B7285;
+  --accent-soft: #DDF0F3;
+  --warn: #9A5B00;
+  --warn-soft: #FBEED6;
+  --calm: #7B929A;
+  --font-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1A1F;
+    --surface: #14252C;
+    --ink: #E5EEF1;
+    --muted: #8FA6AF;
+    --line: #25393F;
+    --accent: #52C3D6;
+    --accent-soft: #123740;
+    --warn: #F0B04A;
+    --warn-soft: #3A2D12;
+    --calm: #5F7A84;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1A1F;
+  --surface: #14252C;
+  --ink: #E5EEF1;
+  --muted: #8FA6AF;
+  --line: #25393F;
+  --accent: #52C3D6;
+  --accent-soft: #123740;
+  --warn: #F0B04A;
+  --warn-soft: #3A2D12;
+  --calm: #5F7A84;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 48px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 18px; }
+.eyebrow { margin: 0; font-family: var(--font-data); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 2px 0 0; font-family: var(--font-display); font-size: 1.75rem; line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.fresh { margin: 0; font-family: var(--font-data); font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
+.fresh::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.fresh.stale { color: var(--warn); }
+.fresh.stale::before { background: var(--warn); }
+.fresh.off::before { background: var(--calm); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px; min-width: 0; }
+.panel h2 { margin: 0 0 12px; font-family: var(--font-display); font-size: 1.05rem; display: flex; align-items: baseline; gap: 8px; }
+.panel h2 .count { font-family: var(--font-data); font-size: 12px; font-weight: 500; color: var(--muted); }
+
+.now { margin-bottom: 16px; display: grid; gap: 14px 28px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .now.has-meta { grid-template-columns: minmax(0, 1fr) auto; } }
+.now .label { margin: 0 0 6px; font-family: var(--font-data); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.now .task { margin: 0; font-family: var(--font-display); font-size: clamp(1.4rem, 3.2vw, 2.1rem); line-height: 1.15; letter-spacing: -.015em; text-wrap: balance; }
+.now .done { margin: 12px 0 0; display: flex; gap: 10px; align-items: flex-start; color: var(--muted); }
+.now .done .box { flex: none; width: 16px; height: 16px; margin-top: 3px; border: 1.5px solid var(--accent); border-radius: 3px; }
+.now .done b { color: var(--ink); font-weight: 600; }
+.now .meta { font-family: var(--font-data); font-size: 13px; color: var(--muted); text-align: left; }
+@media (min-width: 760px) { .now .meta { text-align: right; } }
+.now .meta .big { display: block; font-size: 1.6rem; color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.now.empty .task { color: var(--muted); }
+.ask { margin: 14px 0 0; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 6px; color: var(--ink); }
+.ask code, .hint code { font-family: var(--font-data); font-size: 13px; background: var(--accent-soft); color: var(--accent); padding: 1px 6px; border-radius: 4px; }
+.hint { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+
+.cols { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); margin-bottom: 16px; }
+@media (min-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.item:first-child { border-top: 0; padding-top: 0; }
+.item .t { font-weight: 500; overflow-wrap: anywhere; }
+.item .s { grid-column: 1; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; min-width: 0; overflow-wrap: anywhere; }
+.kind { font-family: var(--font-data); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); }
+.age { align-self: start; grid-row: 1; grid-column: 2; font-family: var(--font-data); font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.age.warn { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.rows { display: grid; gap: 12px; }
+.row { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; }
+@media (max-width: 520px) { .row { grid-template-columns: minmax(0, 1fr) auto; } .row .track { grid-column: 1 / -1; grid-row: 2; } }
+.row .name { font-family: var(--font-data); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .sub { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.row .num { font-family: var(--font-data); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; min-width: 3ch; }
+.track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.fill.mid { background: var(--calm); }
+.fill.old { background: var(--calm); opacity: .45; }
+.flag { color: var(--warn); font-weight: 600; }
+.btn { margin-top: 14px; font: inherit; font-size: 13px; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { background: var(--accent-soft); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 13px; }
+.log li { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 10px; overflow-wrap: anywhere; }
+.log time { font-family: var(--font-data); color: var(--muted); font-size: 12px; }
+.empty-note { margin: 0; color: var(--muted); font-size: 14px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow" id="today"></p>
+      <h1>Focus Board</h1>
+    </div>
+    <p class="fresh off" id="fresh">Waiting for the first brief</p>
+  </header>
+
+  <section class="panel now empty" id="now" aria-label="Current task"></section>
+
+  <div class="cols">
+    <section class="panel" id="open" aria-label="Open tasks"></section>
+    <section class="panel" id="repos" aria-label="Repos needing attention"></section>
+  </div>
+
+  <div class="cols">
+    <section class="panel" id="parked" aria-label="Parked"></section>
+    <section class="panel" id="log" aria-label="Log"></section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var board = null, repos = null, showAll = false, linked = false;
+  var MAX_REPOS = 10;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function arr(v) { return Array.isArray(v) ? v : []; }
+  function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); return n; }
+  function heading(text, count) {
+    var h = el('h2', null, text);
+    if (count != null) h.appendChild(el('span', 'count', String(count)));
+    return h;
+  }
+  function parse(v) { var d = v ? new Date(v) : null; return d && !isNaN(d) ? d : null; }
+  function daysSince(v) {
+    var d = parse(v); if (!d) return null;
+    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+  }
+  function clock(d) { return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+  function ageLabel(days) { return days === 0 ? 'today' : days + 'd'; }
+
+  function renderHeader() {
+    $('today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    var f = $('fresh');
+    var times = [board && board.updated, board && board.checkedAt, repos && repos.updated].map(parse).filter(Boolean);
+    if (!linked) { f.className = 'fresh off'; f.textContent = 'Not connected'; return; }
+    if (!times.length) { f.className = 'fresh off'; f.textContent = 'Waiting for the first brief'; return; }
+    var latest = new Date(Math.max.apply(null, times.map(function (d) { return d.getTime(); })));
+    var hours = (Date.now() - latest.getTime()) / 3600000;
+    var sameDay = latest.toDateString() === new Date().toDateString();
+    f.className = 'fresh' + (hours > 4 ? ' stale' : '');
+    f.textContent = (sameDay ? 'Updated ' + clock(latest) : 'Updated ' + latest.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ' ' + clock(latest));
+  }
+
+  function renderNow() {
+    var box = clear($('now'));
+    var now = board && board.now;
+    var question = board && board.question;
+    if (now && now.title) {
+      box.className = 'panel now has-meta';
+      var left = el('div');
+      left.appendChild(el('p', 'label', 'Now'));
+      left.appendChild(el('h2', 'task', now.title));
+      if (now.doneWhen) {
+        var done = el('p', 'done');
+        done.appendChild(el('span', 'box'));
+        var txt = el('span');
+        txt.appendChild(el('b', null, 'Done when '));
+        txt.appendChild(document.createTextNode(now.doneWhen));
+        done.appendChild(txt);
+        left.appendChild(done);
+      }
+      box.appendChild(left);
+      var since = parse(now.since);
+      if (since) {
+        var m = el('div', 'meta');
+        var mins = Math.max(0, Math.round((Date.now() - since.getTime()) / 60000));
+        var big = mins >= 60 * 24 ? Math.floor(mins / 1440) + 'd' : mins >= 60 ? Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm' : mins + 'm';
+        m.appendChild(el('span', 'big', big));
+        m.appendChild(document.createTextNode('since ' + clock(since)));
+        box.appendChild(m);
+      }
+    } else {
+      box.className = 'panel now empty';
+      var wrap = el('div');
+      wrap.appendChild(el('p', 'label', 'Now'));
+      wrap.appendChild(el('h2', 'task', 'Nothing set yet'));
+      if (question) wrap.appendChild(el('p', 'ask', question));
+      var hint = el('p', 'hint');
+      hint.appendChild(document.createTextNode('Set it with '));
+      hint.appendChild(el('code', null, '/focus start <task>, done when <result>'));
+      wrap.appendChild(hint);
+      box.appendChild(wrap);
+    }
+  }
+
+  function renderOpen() {
+    var box = clear($('open'));
+    var items = arr(board && board.open);
+    box.appendChild(heading('Open', items.length));
+    if (!items.length) { box.appendChild(el('p', 'empty-note', board ? 'No other open tasks.' : 'Appears after the first morning brief.')); return; }
+    var ul = el('ul', 'list');
+    items.forEach(function (it) {
+      var li = el('li', 'item');
+      li.appendChild(el('span', 't', it.title || 'Untitled'));
+      var days = daysSince(it.touched);
+      if (days != null) li.appendChild(el('span', 'age' + (days >= 5 ? ' warn' : ''), ageLabel(days)));
+      var s = el('span', 's');
+      if (it.kind) s.appendChild(el('span', 'kind', it.kind));
+      if (it.source) s.appendChild(el('span', null, it.source));
+      li.appendChild(s);
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  }
+
+  function renderRepos() {
+    var box = clear($('repos'));
+    var list = arr(repos && repos.attention);
+    box.appendChild(heading('Repos needing attention', list.length || null));
+    if (!list.length) { box.appendChild(el('p', 'empty-note', repos ? 'Nothing uncommitted or unpushed.' : 'Appears after the first repo scan.')); return; }
+
+    var legend = el('p', 'legend');
+    [['var(--accent)', 'touched this week'], ['var(--calm)', 'older'], ['var(--warn)', 'no card or session']].forEach(function (p) {
+      var s = el('span');
+      var i = el('i'); i.style.background = p[0];
+      s.appendChild(i); s.appendChild(document.createTextNode(p[1]));
+      legend.appendChild(s);
+    });
+    box.appendChild(legend);
+
+    // Square-root scale so one huge outlier does not flatten everything else.
+    var max = Math.max.apply(null, list.map(function (r) { return Math.sqrt(Math.max(1, r.dirty || 0)); }));
+    var shown = showAll ? list : list.slice(0, MAX_REPOS);
+    var rows = el('div', 'rows');
+    shown.forEach(function (r) {
+      var row = el('div', 'row');
+      var name = el('span', 'name', r.name || '?');
+      name.title = r.name || '';
+      row.appendChild(name);
+      var track = el('div', 'track');
+      var fill = el('div', 'fill' + (r.lastDays > 60 ? ' old' : r.lastDays > 7 ? ' mid' : ''));
+      fill.style.width = Math.max(3, Math.round(Math.sqrt(Math.max(1, r.dirty || 0)) / max * 100)) + '%';
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el('span', 'num', String(r.dirty || 0)));
+      var sub = el('span', 'sub');
+      if (r.branch) { var b = el('span', null, r.branch); b.title = r.branch; sub.appendChild(b); }
+      if (r.ahead) sub.appendChild(el('span', null, '↑' + r.ahead + ' unpushed'));
+      if (r.lastDays != null) sub.appendChild(el('span', null, r.lastDays === 0 ? 'committed today' : 'last commit ' + r.lastDays + 'd ago'));
+      if (r.tracked === false) sub.appendChild(el('span', 'flag', 'no card or session'));
+      row.appendChild(sub);
+      rows.appendChild(row);
+    });
+    box.appendChild(rows);
+
+    if (list.length > MAX_REPOS) {
+      var btn = el('button', 'btn', showAll ? 'Show fewer' : 'Show all ' + list.length);
+      btn.id = 'toggle-repos';
+      btn.type = 'button';
+      btn.addEventListener('click', function () { showAll = !showAll; renderRepos(); });
+      box.appendChild(btn);
+    }
+    var tail = [];
+    if (repos && repos.scanned) tail.push(repos.scanned + ' repos scanned');
+    if (repos && repos.noUpstream) tail.push(repos.noUpstream + ' clean without an upstream');
+    if (tail.length) box.appendChild(el('p', 'hint', tail.join(' · ')));
+  }
+
+  function renderParked() {
+    var box = clear($('parked'));
+    var items = arr(board && board.parked);
+    box.appendChild(heading('Parked', items.length));
+    if (!items.length) { box.appendChild(el('p', 'empty-note', 'Nothing parked. Use /focus park <idea> to set one aside.')); return; }
+    var ul = el('ul', 'list');
+    items.forEach(function (p) {
+      var li = el('li', 'item');
+      li.appendChild(el('span', 't', typeof p === 'string' ? p : (p.title || 'Untitled')));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  }
+
+  function renderLog() {
+    var box = clear($('log'));
+    var items = arr(board && board.log).slice(0, 8);
+    box.appendChild(heading('Log'));
+    if (!items.length) { box.appendChild(el('p', 'empty-note', 'No entries yet.')); return; }
+    var ul = el('ul', 'log');
+    items.forEach(function (e) {
+      var li = el('li');
+      li.appendChild(el('time', null, e.date || ''));
+      li.appendChild(el('span', null, e.text || ''));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  }
+
+  function renderAll() {
+    renderHeader(); renderNow(); renderOpen(); renderRepos(); renderParked(); renderLog();
+  }
+
+  renderAll();
+
+  (async function connect() {
+    var db = null;
+    try { db = await (window.claude && window.claude.use ? window.claude.use('db') : null); } catch (e) { db = null; }
+    if (!db) { renderAll(); return; }
+    linked = true;
+    function watch(path, assign) {
+      db.doc(path).onSnapshot(function (snap) {
+        assign(snap.exists ? snap.data() : null);
+        renderAll();
+      }, function () { linked = false; renderAll(); });
+    }
+    watch('dash/board', function (d) { board = d; });
+    watch('dash/repos', function (d) { repos = d; });
+    renderAll();
+  })();
+})();
+</script>
